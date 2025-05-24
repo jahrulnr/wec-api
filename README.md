@@ -2,7 +2,7 @@
 
 API Switcher is a Laravel-based tool that allows seamless switching between real API endpoints and mock responses based on defined criteria. It provides a flexible way to develop and test applications without relying on external API services.
 
-![API Switcher Flow](../docs/flow.png)
+![API Switcher Flow](docs/flow.png)
 
 > **Note**: API Switcher is designed primarily for development and testing environments to facilitate API mocking and testing.
 
