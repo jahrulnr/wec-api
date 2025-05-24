@@ -1,0 +1,55 @@
+/* Auth Alerts */
+.alert-box {
+  margin-bottom: 25px;
+  padding: 15px;
+  border-radius: 5px;
+  display: flex;
+  align-items: flex-start;
+  animation: slideInDown 0.5s ease forwards;
+}
+
+.alert-box.success {
+  background-color: rgba(40, 167, 69, 0.15);
+  border-left: 4px solid #28a745;
+  color: #9be7ac;
+}
+
+.alert-box.error {
+  background-color: rgba(231, 74, 59, 0.15);
+  border-left: 4px solid #e74a3b;
+  color: #f5a49c;
+}
+
+.alert-icon {
+  margin-right: 15px;
+  font-size: 20px;
+  padding-top: 2px;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-content ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.alert-content ul li {
+  margin-bottom: 5px;
+}
+
+.alert-content ul li:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes slideInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

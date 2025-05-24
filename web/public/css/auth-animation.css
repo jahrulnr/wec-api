@@ -1,0 +1,154 @@
+/* Animation Effects */
+.auth-animation .headline,
+.auth-animation .subtext,
+.auth-animation .form-control,
+.auth-animation .form-checkbox,
+.auth-animation .btn-sign-up,
+.auth-animation .social-divider,
+.auth-animation .social-icons,
+.auth-animation .auth-links {
+  opacity: 0;
+  -webkit-transform: translateY(20px);
+          transform: translateY(20px);
+  -webkit-animation: fadeInUp 0.8s ease forwards;
+          animation: fadeInUp 0.8s ease forwards;
+}
+
+.auth-animation .headline {
+  animation-delay: 0.2s;
+}
+
+.auth-animation .subtext {
+  animation-delay: 0.4s;
+}
+
+.auth-animation .form-control:nth-child(1) {
+  animation-delay: 0.6s;
+}
+
+.auth-animation .form-control:nth-child(2) {
+  animation-delay: 0.7s;
+}
+
+.auth-animation .form-control:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+.auth-animation .form-control:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+.auth-animation .form-checkbox {
+  animation-delay: 1s;
+}
+
+.auth-animation .btn-sign-up {
+  animation-delay: 1.1s;
+}
+
+.auth-animation .social-divider {
+  animation-delay: 1.2s;
+}
+
+.auth-animation .social-icons {
+  animation-delay: 1.3s;
+}
+
+.auth-animation .auth-links {
+  animation-delay: 1.4s;
+}
+
+@-webkit-keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    -webkit-transform: translateY(20px);
+            transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    -webkit-transform: translateY(20px);
+            transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+}
+
+/* Background Gradient Animation */
+.left-section::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(78, 115, 223, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: -1;
+  animation: gradientShift 15s ease infinite;
+}
+
+@-webkit-keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Fluid Background */
+.fluid-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  opacity: 0.1;
+  background: url('/img/pattern.svg');
+  background-size: cover;
+  animation: fluidMove 30s linear infinite;
+}
+
+@-webkit-keyframes fluidMove {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes fluidMove {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}

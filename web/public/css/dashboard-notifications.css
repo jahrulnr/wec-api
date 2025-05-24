@@ -1,0 +1,89 @@
+/* Dashboard Notifications */
+.flash-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 9999;
+  max-width: 400px;
+  min-width: 300px;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.flash-notification.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.flash-notification .notification-content {
+  display: flex;
+  align-items: center;
+}
+
+.flash-notification i {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.flash-notification .close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  margin-left: 10px;
+}
+
+/* Notification types */
+.flash-notification.success {
+  border-left: 4px solid #28a745;
+}
+
+.flash-notification.success i {
+  color: #28a745;
+}
+
+.flash-notification.error {
+  border-left: 4px solid #dc3545;
+}
+
+.flash-notification.error i {
+  color: #dc3545;
+}
+
+.flash-notification.warning {
+  border-left: 4px solid #ffc107;
+}
+
+.flash-notification.warning i {
+  color: #ffc107;
+}
+
+.flash-notification.info {
+  border-left: 4px solid #17a2b8;
+}
+
+.flash-notification.info i {
+  color: #17a2b8;
+}
+
+/* Mobile responsive */
+@media (max-width: 576px) {
+  .flash-notification {
+    top: auto;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    min-width: auto;
+    max-width: none;
+  }
+}

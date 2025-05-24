@@ -1,0 +1,77 @@
+/* Password strength indicator */
+.password-strength-indicator {
+  margin-top: -15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.strength-bars span {
+  flex: 1;
+  height: 4px;
+  background-color: #6c757d;
+  border-radius: 2px;
+  opacity: 0.3;
+  transition: all 0.3s;
+}
+
+/* Strength 1 - Weak */
+.strength-bars span.strength-1 {
+  background-color: #e74a3b;
+  opacity: 1;
+}
+
+/* Strength 2 - Fair */
+.strength-bars span.strength-2 {
+  background-color: #f6c23e;
+  opacity: 1;
+}
+
+/* Strength 3 - Good */
+.strength-bars span.strength-3 {
+  background-color: #36b9cc;
+  opacity: 1;
+}
+
+/* Strength 4 - Strong */
+.strength-bars span.strength-4 {
+  background-color: #1cc88a;
+  opacity: 1;
+}
+
+.strength-text {
+  font-size: 12px;
+  color: #adb5bd;
+}
+
+.strength-text.text-strength-1 {
+  color: #e74a3b;
+}
+
+.strength-text.text-strength-2 {
+  color: #f6c23e;
+}
+
+.strength-text.text-strength-3 {
+  color: #36b9cc;
+}
+
+.strength-text.text-strength-4 {
+  color: #1cc88a;
+}
+
+/* Loading button state */
+button[type="submit"] .fa-spin {
+  margin-right: 5px;
+}
+
+/* Alert animation */
+.alert-box {
+  transition: opacity 0.3s ease;
+}

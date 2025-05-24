@@ -1,0 +1,26 @@
+services:
+  wec-api:
+    image: wec-api:dev
+    container_name: wec-api
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../web/app:/apps/app
+      - ../../web/config:/apps/config
+      - ../../web/database:/apps/database
+      - ../../web/public:/apps/public
+      - ../../web/resources:/apps/resources
+      - ../../web/routes:/apps/routes
+      - ../../logs:/apps/storage/logs
+      - ../../composer.json:/apps/composer.json
+      - ../../composer.lock:/apps/composer.lock
+    ports:
+      - 7000:7000
+    networks:
+      - services
+    
+networks:
+  services:
+    external: true
+    name: services

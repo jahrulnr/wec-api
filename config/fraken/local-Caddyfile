@@ -1,0 +1,56 @@
+{
+	frankenphp {
+		max_threads auto
+		worker {
+			file "/apps/public/frankenphp-worker.php"
+			watch /apps/**/*.php
+		}
+	}
+
+	servers {
+		enable_full_duplex
+	}
+
+	order php_server before file_server
+	order php before file_server
+}
+
+:7000 {
+	# Root directory
+	root * /apps/public
+	encode zstd br gzip
+
+	# Logging setup (access and error logs)
+	log {
+		output file /apps/storage/logs/access.log
+		format json
+	}
+
+	@hiddenPhpFilesRegexp path_regexp \..*/.*\.php$
+	error @hiddenPhpFilesRegexp 404
+
+	@protectedFilesRegexp {
+		not path /.well-known*
+		path_regexp \.(engine|inc|install|make|module|profile|po|sh|.*sql|theme|twig|tpl(\.php)?|xtmpl|yml)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^/(\..*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock)|web\.config|yarn\.lock|package\.json)$|^\/#.*#$|\.php(~|\.sw[op]|\.bak|\.orig|\.save)$
+	}
+	error @protectedFilesRegexp 403
+
+	@notFoundRootFilesRegexp path_regexp ^/.*(README\.md|INSTALL\.txt)$
+	error @notFoundRootFilesRegexp 404
+
+	@static {
+		file
+		path *.avif *.css *.eot *.gif *.gz *.ico *.jpg *.jpeg *.js *.otf *.pdf *.png *.svg *.ttf *.webp *.woff *.woff2
+	}
+	header @static Cache-Control "max-age=31536000,public,immutable" 
+
+	# Redirect "/index.php" URLs to remove index.php from the URL path
+	redir /index.php/* /{path} 307
+
+	php_server {
+		index frankenphp-worker.php
+		try_files {path} frankenphp-worker.php
+		# Required for the public/storage/ directory...
+		resolve_root_symlink
+	}
+}
