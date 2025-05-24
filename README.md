@@ -35,15 +35,11 @@ API Switcher is a Laravel-based tool that allows seamless switching between real
    ```bash
    composer install
    ```
-3. Publish the configuration file:
-   ```bash
-   php artisan vendor:publish --tag=api-switcher-config
-   ```
-4. Run migrations to create the required tables:
+3. Run migrations to create the required tables:
    ```bash
    php artisan migrate
    ```
-5. Set up environment variables in your `.env` file:
+4. Set up environment variables in your `.env` file:
    ```
    REAL_API_BASE_URL=https://api.example.com
    API_SWITCHER_ENABLED=true
