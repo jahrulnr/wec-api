@@ -223,7 +223,10 @@ class ApiSwitcherDashboardController extends Controller
         $fullUrl = rtrim($baseUrl, '/') . '/api/' . ltrim($path, '/');
 
         // Prepare the HTTP client
-        $client = new \GuzzleHttp\Client(['http_errors' => false]);
+        $client = new \GuzzleHttp\Client([
+            'http_errors' => false,
+            'verify' => false,
+        ]);
         
         $options = ['headers' => ['Accept' => 'application/json']];
         

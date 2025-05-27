@@ -7,9 +7,10 @@ use App\Models\ApiLog;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class ApiSwitcherMiddleware
 {
@@ -132,7 +133,7 @@ class ApiSwitcherMiddleware
     }
     
     /**
-     * Forward the request to the real API
+     * Forward the request to the real API using Guzzle directly
      *
      * @param Request $request
      * @param ApiCriteria $criteria
@@ -142,10 +143,10 @@ class ApiSwitcherMiddleware
     {
         try {
             $endpoint = $criteria->getRealEndpoint();
-            $method = strtolower($request->method());
+            $method = strtoupper($request->method());
 
             // Check if we should use caching
-            $shouldCache = config('api_switcher.cache.enabled') && $method === 'get';
+            $shouldCache = config('api_switcher.cache.enabled') && strtolower($method) === 'get';
             if ($shouldCache) {
                 $cacheKey = $this->generateCacheKey($endpoint, $request->all());
                 $ttl = config('api_switcher.cache.ttl', 3600);
@@ -160,40 +161,44 @@ class ApiSwitcherMiddleware
             // Forward all headers except Host
             $headers = $request->headers->all();
             unset($headers['host']);
-            // Flatten headers (Laravel Http expects string values)
+            
+            // Flatten headers for Guzzle
             $flatHeaders = [];
             foreach ($headers as $key => $value) {
-                $flatHeaders[$key] = is_array($value) ? implode(",", $value) : $value;
+                $flatHeaders[$key] = is_array($value) ? implode(", ", $value) : $value;
             }
 
-            $httpRequest = Http::withHeaders($flatHeaders)
-                ->withoutVerifying()
-                ->timeout(config('api_switcher.http_client.timeout', 30))
-                ->connectTimeout(config('api_switcher.http_client.connect_timeout', 10));
-            $retries = config('api_switcher.http_client.retry', 1);
-            $retryDelay = config('api_switcher.http_client.retry_delay', 100);
-            if ($retries > 0) {
-                $httpRequest = $httpRequest->retry($retries, $retryDelay);
-            }
-
-            // Add cookies
-            foreach ($request->cookies as $key => $value) {
-                $httpRequest = $httpRequest->withCookies([$key => $value], parse_url($endpoint, PHP_URL_HOST));
-            }
-
+            // Create a new Guzzle client
+            $client = new Client([
+                'timeout' => config('api_switcher.http_client.timeout', 30),
+                'connect_timeout' => config('api_switcher.http_client.connect_timeout', 10),
+                'http_errors' => false,
+                'verify' => false,
+            ]);
+            
             // Prepare request options
             $options = [
                 'headers' => $flatHeaders,
                 'query' => $request->query(),
+                'http_errors' => false,
                 'verify' => false,
             ];
-            // Handle file uploads and body
-            if ($request->isMethod('get')) {
-                $response = $httpRequest->send('GET', $endpoint, $options);
-            } elseif ($request->isMethod('post') || $request->isMethod('put') || $request->isMethod('patch') || $request->isMethod('delete')) {
+            
+            // Add cookies if present
+            if (count($request->cookies) > 0) {
+                $cookieJar = \GuzzleHttp\Cookie\CookieJar::fromArray(
+                    $request->cookies->all(),
+                    parse_url($endpoint, PHP_URL_HOST)
+                );
+                $options['cookies'] = $cookieJar;
+            }
+            
+            // Handle file uploads and body based on request method
+            if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
                 if ($request->hasFile(null)) {
-                    // Forward multipart/form-data
+                    // Handle multipart/form-data with file uploads
                     $options['multipart'] = [];
+                    
                     foreach ($request->allFiles() as $name => $file) {
                         $options['multipart'][] = [
                             'name' => $name,
@@ -201,32 +206,47 @@ class ApiSwitcherMiddleware
                             'filename' => $file->getClientOriginalName(),
                         ];
                     }
+                    
+                    // Add other form fields
                     foreach ($request->except(array_keys($request->allFiles())) as $key => $value) {
                         $options['multipart'][] = [
                             'name' => $key,
                             'contents' => $value,
                         ];
                     }
-                    $response = $httpRequest->send(strtoupper($method), $endpoint, $options);
                 } else {
-                    // Forward raw body (JSON, form, etc)
+                    // Handle raw body content (JSON, form, etc.)
                     $options['body'] = $request->getContent();
-                    $response = $httpRequest->send(strtoupper($method), $endpoint, $options);
                 }
-            } else {
-                throw new \Exception("Unsupported HTTP method: {$method}");
             }
-
+            
+            // Execute the request
+            $response = $client->request($method, $endpoint, $options);
+            
+            // Process response
+            $responseBody = (string) $response->getBody();
+            $statusCode = $response->getStatusCode();
+            $responseHeaders = $response->getHeaders();
+            
             // Log the response if logging is enabled
             if (config('api_switcher.logging.enabled')) {
                 $logData = [
                     'method' => $method,
                     'url' => $endpoint,
-                    'status' => $response->status(),
+                    'status' => $statusCode,
                 ];
+                
                 if (config('api_switcher.logging.include_response_body')) {
-                    $logData['response'] = $response->json();
+                    // Try to parse as JSON if possible
+                    try {
+                        $responseBodyForLog = json_decode($responseBody, true);
+                        $logData['response'] = $responseBodyForLog;
+                    } catch (\Exception $e) {
+                        $logData['response'] = '[Non-JSON response]';
+                        $responseBodyForLog = '[Non-JSON response]';
+                    }
                 }
+                
                 Log::info("API Switcher: Forwarded request to real API", $logData);
                 
                 // Log to database
@@ -234,24 +254,26 @@ class ApiSwitcherMiddleware
                     $criteria->path,
                     $criteria->method,
                     'real',
-                    $response->status(),
-                    config('api_switcher.logging.include_response_body') ? ['body' => $response->json()] : []
+                    $statusCode,
+                    config('api_switcher.logging.include_response_body') ? 
+                        ['body' => $responseBodyForLog ?? '[Non-JSON response]'] : []
                 );
             }
 
             // Cache the response if caching is enabled and this is a GET request
             if ($shouldCache) {
                 $cachedData = [
-                    'body' => $response->body(),
-                    'status' => $response->status(),
-                    'headers' => $response->headers()
+                    'body' => $responseBody,
+                    'status' => $statusCode,
+                    'headers' => $responseHeaders
                 ];
                 Cache::put($cacheKey, $cachedData, $ttl);
             }
 
-            // Return the response from the real API
-            return response($response->body(), $response->status())
-                ->withHeaders($response->headers());
+            // Return Laravel response from Guzzle response
+            return response($responseBody, $statusCode)
+                ->withHeaders($responseHeaders);
+                
         } catch (\Exception $e) {
             Log::error("API Switcher: Error forwarding to real API: " . $e->getMessage(), [
                 'exception' => $e,
@@ -270,7 +292,10 @@ class ApiSwitcherMiddleware
                 ]
             );
             
-            return response()->json(['error' => 'Failed to forward request to real API'], 500);
+            return response()->json([
+                'error' => 'Failed to forward request to real API',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
     

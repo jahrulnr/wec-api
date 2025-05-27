@@ -44,6 +44,7 @@ class PostmanController extends Controller
         }
         $options = [
             'headers' => $headers,
+            'query' => $request->query(),
             'http_errors' => false,
             'verify' => false,
         ];
