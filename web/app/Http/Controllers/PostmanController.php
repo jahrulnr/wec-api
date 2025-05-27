@@ -45,6 +45,7 @@ class PostmanController extends Controller
         $options = [
             'headers' => $headers,
             'http_errors' => false,
+            'verify' => false,
         ];
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && $body) {
             $options['body'] = $body;

@@ -167,6 +167,7 @@ class ApiSwitcherMiddleware
             }
 
             $httpRequest = Http::withHeaders($flatHeaders)
+                ->withoutVerifying()
                 ->timeout(config('api_switcher.http_client.timeout', 30))
                 ->connectTimeout(config('api_switcher.http_client.connect_timeout', 10));
             $retries = config('api_switcher.http_client.retry', 1);
@@ -184,6 +185,7 @@ class ApiSwitcherMiddleware
             $options = [
                 'headers' => $flatHeaders,
                 'query' => $request->query(),
+                'verify' => false,
             ];
             // Handle file uploads and body
             if ($request->isMethod('get')) {
