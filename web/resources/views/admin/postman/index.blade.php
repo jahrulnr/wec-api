@@ -11,8 +11,8 @@
         <div class="col-md-6">
           <div class="form-group">
             <label for="url">Full API URL</label>
-            <input type="text" class="form-control" id="url" name="url" placeholder="https://your-api-url.com/api/endpoint" required value="{{ old('url', $old['url'] ?? '') }}">
-            <small class="form-text text-muted">Enter the full URL of the API endpoint you want to test.</small>
+            <input type="text" class="form-control" id="url" name="url" placeholder="https://your-api-url.com/api/endpoint or paste curl command" required value="{{ old('url', $old['url'] ?? '') }}">
+            <small class="form-text text-muted">Enter the full URL of the API endpoint you want to test or paste a curl command.</small>
           </div>
           <div class="form-group mt-3">
             <label for="method">HTTP Method</label>
@@ -37,10 +37,27 @@
           </div>
         </div>
       </div>
-      <div class="form-group mt-4">
+      <div class="form-group mt-4 d-flex justify-content-between">
         <button type="submit" class="btn btn-primary">Send Request</button>
+        <button type="button" id="generateCurl" class="btn btn-secondary">Generate cURL Command</button>
       </div>
     </form>
+
+    <!-- cURL Command Display Section -->
+    <div id="curlCommandContainer" class="mt-4 d-none">
+      <div class="card bg-dark">
+        <div class="card-header text-white bg-dark">
+          <div class="d-flex justify-content-between">
+            <h5 class="mb-0">cURL Command</h5>
+            <button type="button" id="copyCurlCommand" class="btn btn-sm btn-outline-light">Copy</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <pre id="curlCommand" class="mb-0 text-light" style="white-space: pre-wrap; word-break: break-all;"></pre>
+        </div>
+      </div>
+    </div>
+    
     @if ($error ?? false)
       <div class="alert alert-danger mt-3">{{ $error }}</div>
     @endif
@@ -159,6 +176,197 @@
       bodyEditor.setOption('readOnly', true);
       bodyEditor.getWrapperElement().style.opacity = '0.5';
     }
+
+    // cURL Command Generation
+    document.getElementById('generateCurl').addEventListener('click', function() {
+      headersEditor.save();
+      bodyEditor.save();
+      const url = document.getElementById('url').value.trim();
+      const method = document.getElementById('method').value;
+      const headers = headersEditor.getValue().trim();
+      const body = bodyEditor.getValue().trim();
+
+      let curlCommand = `curl -X ${method} "${url}"`;
+
+      // Add headers to cURL command
+      if (headers) {
+        try {
+          const jsonHeaders = JSON.parse(headers);
+          Object.keys(jsonHeaders).forEach(key => {
+            const value = jsonHeaders[key];
+            curlCommand += ` -H "${key}: ${value}"`;
+          });
+        } catch (error) {
+          alert('Invalid JSON in Headers: ' + error.message);
+          return;
+        }
+      }
+
+      // Add body to cURL command if method is POST, PUT, or PATCH
+      if (["POST", "PUT", "PATCH"].includes(method) && body) {
+        try {
+          // Format JSON body with indentation
+          const jsonBody = JSON.stringify(JSON.parse(body), null, 2);
+          curlCommand += ` -d '${jsonBody}'`;
+        } catch (error) {
+          alert('Invalid JSON in Request Body: ' + error.message);
+          return;
+        }
+      }
+
+      // Display the generated cURL command
+      document.getElementById('curlCommand').textContent = curlCommand;
+      document.getElementById('curlCommandContainer').classList.remove('d-none');
+    });
+
+    // Copy cURL command to clipboard
+    document.getElementById('copyCurlCommand').addEventListener('click', function() {
+      const curlCommand = document.getElementById('curlCommand');
+      curlCommand.classList.remove('text-light');
+      curlCommand.classList.add('bg-white', 'border', 'rounded');
+      const range = document.createRange();
+      range.selectNode(curlCommand);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+      curlCommand.classList.add('text-light');
+      curlCommand.classList.remove('bg-white', 'border', 'rounded');
+      alert('cURL command copied to clipboard!');
+    });
+
+    // cURL Command Parser
+    document.getElementById('url').addEventListener('blur', function() {
+      const curlCommand = this.value.trim();
+      if (curlCommand.startsWith('curl ')) {
+        try {
+          // Parse the curl command
+          let parsedCommand = {
+            method: 'GET', // Default method
+            url: '',
+            headers: {},
+            body: ''
+          };
+
+          // Extract method (-X or --request)
+          const methodMatch = curlCommand.match(/(?:\s-X|\s--request)\s+([A-Z]+)/i);
+          if (methodMatch && methodMatch[1]) {
+            parsedCommand.method = methodMatch[1].toUpperCase();
+          }
+
+          // Extract URL - try multiple patterns for URL extraction
+          
+          // Pattern 1: URL in quotes after curl
+          let urlMatch = curlCommand.match(/curl\s+['"]?(https?:\/\/[^"'\s]+)['"]?/i);
+          
+          // Pattern 2: URL in quotes anywhere
+          if (!urlMatch) {
+            urlMatch = curlCommand.match(/['"]?(https?:\/\/[^"'\s]+)['"]?/i);
+          }
+          
+          // Pattern 3: URL after single quotes
+          if (!urlMatch) {
+            urlMatch = curlCommand.match(/curl\s+'([^']+)'/i);
+          }
+          
+          if (urlMatch && urlMatch[1]) {
+            parsedCommand.url = urlMatch[1].replace(/["']/g, '');
+          }
+
+          // Extract headers (-H or --header)
+          const headerRegex = /(?:\s-H|\s--header)\s+["']([^:]+):\s*([^"']+)["']/g;
+          let headerMatch;
+          while ((headerMatch = headerRegex.exec(curlCommand)) !== null) {
+            if (headerMatch[1] && headerMatch[2]) {
+              parsedCommand.headers[headerMatch[1].trim()] = headerMatch[2].trim();
+            }
+          }
+
+          // Extract body (-d, --data, --data-binary, --data-raw)
+          const bodyRegex = /(?:\s-d|\s--data|\s--data-binary|\s--data-raw)\s+["'](.+?)["'](?:\s|$)/s;
+          const bodyMatch = curlCommand.match(bodyRegex);
+          if (bodyMatch && bodyMatch[1]) {
+            let bodyContent = bodyMatch[1];
+            
+            // Try to parse as JSON
+            try {
+              // If it's escaped JSON, unescape it
+              if (bodyContent.includes('\\\"')) {
+                bodyContent = bodyContent.replace(/\\"/g, '"');
+              }
+              
+              // Parse and re-stringify to format properly
+              const parsedJson = JSON.parse(bodyContent);
+              parsedCommand.body = JSON.stringify(parsedJson, null, 2);
+            } catch (e) {
+              // If not valid JSON, use as is
+              parsedCommand.body = bodyContent;
+            }
+          }
+          
+          // If no body found yet, try alternate formats
+          if (!parsedCommand.body) {
+            // For unquoted data
+            const altBodyRegex = /(?:\s-d|\s--data|\s--data-binary|\s--data-raw)\s+(\S+)(?:\s|$)/;
+            const altBodyMatch = curlCommand.match(altBodyRegex);
+            if (altBodyMatch && altBodyMatch[1]) {
+              let bodyContent = altBodyMatch[1];
+              try {
+                const parsedJson = JSON.parse(bodyContent);
+                parsedCommand.body = JSON.stringify(parsedJson, null, 2);
+              } catch (e) {
+                parsedCommand.body = bodyContent;
+              }
+            }
+          }
+          
+          // Last resort body extraction - look for data content at the end
+          if (!parsedCommand.body) {
+            // Try to find --data-raw at the end of the command
+            const endBodyMatch = curlCommand.match(/--data-raw\s+['"](.+?)['"]$/);
+            if (endBodyMatch && endBodyMatch[1]) {
+              parsedCommand.body = endBodyMatch[1];
+            }
+          }
+          
+          // For Telkomsel-like curl commands with special escaping
+          if (!parsedCommand.body && curlCommand.includes('--data-raw')) {
+            const rawDataMatch = curlCommand.match(/--data-raw\s+'([^']+)'/);
+            if (rawDataMatch && rawDataMatch[1]) {
+              try {
+                const parsedJson = JSON.parse(rawDataMatch[1]);
+                parsedCommand.body = JSON.stringify(parsedJson, null, 2);
+              } catch (e) {
+                parsedCommand.body = rawDataMatch[1];
+              }
+            }
+          }
+
+          // Update the form fields
+          this.value = parsedCommand.url;
+          document.getElementById('method').value = parsedCommand.method;
+
+          // Set headers
+          if (Object.keys(parsedCommand.headers).length > 0) {
+            headersEditor.setValue(JSON.stringify(parsedCommand.headers, null, 2));
+          }
+
+          // Set body if present and method allows it
+          if (parsedCommand.body && ["POST", "PUT", "PATCH"].includes(parsedCommand.method)) {
+            bodyEditor.setValue(parsedCommand.body);
+            bodyEditor.setOption('readOnly', false);
+            bodyEditor.getWrapperElement().style.opacity = '1';
+          }
+
+          // Trigger the method change to update form state
+          const event = new Event('change');
+          document.getElementById('method').dispatchEvent(event);
+        } catch (error) {
+          console.error('Error parsing curl command:', error);
+          alert('Failed to parse curl command: ' + error.message);
+        }
+      }
+    });
   });
 </script>
 @endpush
