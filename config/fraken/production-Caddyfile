@@ -1,7 +1,9 @@
 {
 	frankenphp {
 		max_threads auto
-		worker "/apps/public/frankenphp-worker.php" auto
+		worker {
+			file "/apps/public/frankenphp-worker.php"
+		}
 	}
 
 	servers {
@@ -12,7 +14,7 @@
 	order php before file_server
 }
 
-:7000 {
+:8085 {
 	# Root directory
 	root * /apps/public
 	encode zstd br gzip

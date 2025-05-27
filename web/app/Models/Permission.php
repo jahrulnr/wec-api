@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsToMany;
 
 class Permission extends Model
 {
@@ -36,7 +36,7 @@ class Permission extends Model
      */
     public function users()
     {
-        return User::whereHas('roles', function($query) {
+        return Role::with('roles', function($query) {
             $query->whereHas('permissions', function($query) {
                 $query->where('permissions.id', $this->id);
             });

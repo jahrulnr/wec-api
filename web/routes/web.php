@@ -14,6 +14,10 @@ use App\Http\Controllers\PostmanController;
 use App\Http\Middleware\ApiSwitcherMiddleware;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 
+Route::get("/health", function() {
+    return "OK";
+});
+
 Route::get("/", function(){
     return redirect()->route('homepage');
 });

@@ -10,10 +10,10 @@
 
   @include('partials.assets.css')
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="{{ asset('') }}css/auth.css">
-  <link rel="stylesheet" href="{{ asset('') }}css/auth-animation.css">
-  <link rel="stylesheet" href="{{ asset('') }}css/auth-alerts.css">
-  <link rel="stylesheet" href="{{ asset('') }}css/auth-ui-enhancements.css">
+  <link rel="stylesheet" href="{{ asset('') }}cms-api/css/auth.css">
+  <link rel="stylesheet" href="{{ asset('') }}cms-api/css/auth-animation.css">
+  <link rel="stylesheet" href="{{ asset('') }}cms-api/css/auth-alerts.css">
+  <link rel="stylesheet" href="{{ asset('') }}cms-api/css/auth-ui-enhancements.css">
   @stack('styles')
 </head>
 <body class="auth-page">
@@ -32,7 +32,7 @@
   </div>
 
   @include('partials.assets.js')
-  <script src="{{ asset('') }}js/auth.js"></script>
+  <script src="{{ asset('') }}cms-api/js/auth.js"></script>
   @stack('scripts')
 </body>
 </html>

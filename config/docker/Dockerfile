@@ -26,6 +26,7 @@ RUN apt-get update \
         mbstring \
         uploadprogress \
         redis \
+        mongodb \
     && groupadd -g ${GID} apps \
     && useradd -u ${UID} -g ${GID} apps \
     && apt-get autoremove -y \

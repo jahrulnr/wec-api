@@ -4,6 +4,9 @@ IMAGE_NAME=wec-api
 build-app:
 	docker build . -t ${IMAGE_NAME}:dev -f config/docker/Dockerfile --progress plain
 
+build-arm:
+	docker build . -t ${IMAGE_NAME}:dev -f config/docker/Dockerfile --progress plain --platform arm64 --build-arg "DOCKER_ENV=production"
+
 .PHONY: network
 network:
 	if [ ! -z "$(docker network ls | grep services)" ]; then \

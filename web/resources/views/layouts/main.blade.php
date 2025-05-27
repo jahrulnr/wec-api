@@ -56,7 +56,7 @@
 </div>
 <!-- ./wrapper -->
 @include('partials.assets.js')
-<script src="{{ asset('') }}js/dashboard.js"></script>
+<script src="{{ asset('') }}cms-api/js/dashboard.js"></script>
 @stack('scripts')
 </body>
 </html>

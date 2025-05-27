@@ -15,7 +15,23 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::withCount(['users', 'permissions'])->paginate(15);
+        // For MongoDB, we need to handle withCount differently
+        $roles = Role::all()->map(function($role) {
+            $role->users_count = $role->users()->count();
+            $role->permissions_count = $role->permissions()->count();
+            return $role;
+        });
+        
+        // Manual pagination for MongoDB
+        $page = request()->get('page', 1);
+        $perPage = 15;
+        $roles = new \Illuminate\Pagination\LengthAwarePaginator(
+            $roles->forPage($page, $perPage),
+            $roles->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url()]
+        );
         
         return view('admin.role.index', [
             'menu' => 'User Management',
@@ -78,7 +94,8 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         $role->load('permissions');
-        $role->loadCount('users');
+        // For MongoDB, manually count related users instead of using loadCount
+        $role->users_count = $role->users()->count();
         
         return view('admin.role.show', [
             'menu' => 'User Management',
