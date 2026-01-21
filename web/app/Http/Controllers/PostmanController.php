@@ -42,9 +42,15 @@ class PostmanController extends Controller
         if ($request->reqHeaders) {
             $headers = json_decode($request->reqHeaders, true);
         }
+        // Parse query string from the URL
+        $urlParts = parse_url($url);
+        $query = [];
+        if (isset($urlParts['query'])) {
+            parse_str($urlParts['query'], $query);
+        }
         $options = [
             'headers' => $headers,
-            'query' => $request->query(),
+            'query' => $query,
             'http_errors' => false,
             'verify' => false,
         ];
