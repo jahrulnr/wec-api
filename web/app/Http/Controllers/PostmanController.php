@@ -38,7 +38,7 @@ class PostmanController extends Controller
         $url = $request->url;
         $method = strtoupper($request->method);
         $headers = [];
-        $body = $request->body;
+        $body = $request->reqBody;
         if ($request->reqHeaders) {
             $headers = json_decode($request->reqHeaders, true);
         }

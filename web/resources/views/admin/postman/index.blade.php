@@ -238,7 +238,12 @@
     // cURL Command Parser
     document.getElementById('url').addEventListener('blur', function() {
       const curlCommand = this.value.trim();
+      
       if (curlCommand.startsWith('curl ')) {
+        headersEditor.setValue("{}");
+        headersEditor.save();
+        bodyEditor.setValue("{}");
+        bodyEditor.save();
         try {
           // Parse the curl command
           let parsedCommand = {
@@ -283,7 +288,7 @@
           }
 
           // Extract body (-d, --data, --data-binary, --data-raw)
-          const bodyRegex = /(?:\s-d|\s--data|\s--data-binary|\s--data-raw)\s+["'](.+?)["'](?:\s|$)/s;
+          const bodyRegex = /(?:\s-d|\s--data|\s--data-binary|\s--data-raw)\s+["'](.+)["'](?:\s|$)/s;
           const bodyMatch = curlCommand.match(bodyRegex);
           if (bodyMatch && bodyMatch[1]) {
             let bodyContent = bodyMatch[1];
@@ -340,6 +345,11 @@
                 parsedCommand.body = rawDataMatch[1];
               }
             }
+          }
+
+          // If method is GET but has body, change to POST
+          if (parsedCommand.method === 'GET' && parsedCommand.body) {
+            parsedCommand.method = 'POST';
           }
 
           // Update the form fields
