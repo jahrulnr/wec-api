@@ -27,13 +27,13 @@
           </div>
           <div class="form-group mt-3">
             <label for="headers">Request Headers (JSON)</label>
-            <textarea class="form-control" id="headers" name="headers" rows="3" style="font-family: monospace;">{{ old('headers', $old['headers'] ?? "{\n  \"Content-Type\": \"application/json\",\n  \"Accept\": \"application/json\"\n}") }}</textarea>
+            <textarea class="form-control" id="headers" name="reqHeaders" rows="3" style="font-family: monospace;">{{ old('reqHeaders', $old['reqHeaders'] ?? "{\n  \"Content-Type\": \"application/json\",\n  \"Accept\": \"application/json\"\n}") }}</textarea>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
             <label for="body">Request Body (JSON - for POST, PUT, PATCH)</label>
-            <textarea class="form-control" id="body" name="body" rows="9" style="font-family: monospace;">{{ old('body', $old['body'] ?? '{}') }}</textarea>
+            <textarea class="form-control" id="body" name="reqBody" rows="9" style="font-family: monospace;">{{ old('reqBody', $old['reqBody'] ?? '{}') }}</textarea>
           </div>
         </div>
       </div>

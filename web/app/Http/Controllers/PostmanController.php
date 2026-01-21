@@ -29,8 +29,8 @@ class PostmanController extends Controller
         $validator = Validator::make($request->all(), [
             'url' => 'required|url',
             'method' => 'required|in:GET,POST,PUT,PATCH,DELETE,OPTIONS',
-            'headers' => 'nullable|string',
-            'body' => 'nullable|string',
+            'reqHeaders' => 'nullable|string',
+            'reqBody' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -39,8 +39,8 @@ class PostmanController extends Controller
         $method = strtoupper($request->method);
         $headers = [];
         $body = $request->body;
-        if ($request->headers) {
-            $headers = json_decode($request->headers, true);
+        if ($request->reqHeaders) {
+            $headers = json_decode($request->reqHeaders, true);
         }
         $options = [
             'headers' => $headers,
